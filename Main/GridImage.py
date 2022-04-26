@@ -3,6 +3,7 @@ import numpy as np
 import csv
 from os import path
 import random
+import math
 
 class MyApp(wx.App):
     def OnInit(self):
@@ -21,7 +22,7 @@ class MyApp(wx.App):
         self.array = np.zeros( (row, column) )
         cRow = 0
         
-        res = random.sample(range(67), 25)
+        res = random.sample(range(1,67), 25)
         res.extend(res)
         random.shuffle(res)
         
@@ -53,8 +54,6 @@ class MyApp(wx.App):
         return result
 
     def _OnSelectedCell(self, event):
-        print(event.GetRow(), event.GetCol())
-        
         with open('tmp.csv', mode='a') as tmpFile:
             fileWriter = csv.writer(tmpFile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             fileWriter.writerow([event.GetRow(), event.GetCol(), self.array[event.GetRow(),event.GetCol()]])
@@ -63,23 +62,47 @@ class MyApp(wx.App):
         if nLines == 2:
             self.first = 0
             self.second = 0
+            self.r1 = 0
+            self.c1 = 0
+            self.r2 = 0
+            self.c2 = 0
             with open('tmp.csv') as tmpFile:
                 fileReader = csv.reader(tmpFile, delimiter=',')
                 line_count = 0
                 for row in fileReader:
                     if line_count == 0:
+                        self.r1 = row[0]
+                        self.c1 = row[1]
                         self.first = row[2]
                         line_count += 1
                     else:
-                        self.seconf = row[2]
+                        self.r2 = row[0]
+                        self.c2 = row[1]
+                        self.second = row[2]
                         line_count += 1
                         
             if self.first == self.second:
-                pass
-            else:
+                print("iguales!")
+                self.grid.ClearGrid()
+                img = wx.Bitmap("../cards/" + str(math.trunc(float(self.first))) +".png", wx.BITMAP_TYPE_ANY)
+                img = self.scale_bitmap(img, 50, 100)
+                imageRenderer = MyImageRenderer(img)
+                self.grid.SetCellRenderer(int(self.r1),int(self.c1),imageRenderer)
+                self.array[int(self.r1),int(self.c1)] = 0
+                
+                img = wx.Bitmap("../cards/" + str(math.trunc(float(self.second))) +".png", wx.BITMAP_TYPE_ANY)
+                img = self.scale_bitmap(img, 50, 100)
+                imageRenderer = MyImageRenderer(img)
+                self.grid.SetCellRenderer(int(self.r2),int(self.c2),imageRenderer)
+                self.array[int(self.r2),int(self.c2)] = 0
                 f = open("tmp.csv", "w+")
                 f.close()
                 
+            else:
+                f = open("tmp.csv", "w+")
+                f.close()
+        
+            print(self.array)
 
     def getFileNumberLine(self):
         file = open('tmp.csv')
